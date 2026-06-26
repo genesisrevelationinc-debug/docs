@@ -1,0 +1,38 @@
+---
+title: "Stellar Path Payments for Stealth Payments"
+description: "Use path payments to send stealth payments across any Stellar asset with automatic conversion and slippage protection."
+---
+
+Stellar path payments let you send one asset and have the recipient receive another—automatically, atomically, and without counterparty risk. When combined with stealth addresses, this becomes a powerful tool for private cross-asset transfers.
+
+This guide covers how to use path payments with the Wraith SDK's stealth payment support.
+
+---
+
+## What Are Path Payments?
+
+Standard payments require the sender and recipient to agree on the asset. Path payments remove that constraint: you can send **any asset you hold**, and the recipient receives **any asset they want**.
+
+Stellar provides two path payment operations:
+
+| Operation | Sender Specifies | Recipient Receives | Use Case |
+|-----------|-----------------|-------------------|----------|
+| `PathPaymentStrictReceive` | Max to send | **Exact** amount | Recipient needs precise value |
+| `PathPaymentStrictSend` | **Exact** amount to send | Min to receive | Sender wants to control spend |
+
+### Strict-Receive vs Strict-Send
+
+**Strict-Receive** (`PathPaymentStrictReceive`): You specify the exact amount the recipient should receive. The network finds paths and tells you the maximum you'll need to send. You set a `sendMax` to protect against slippage.
+
+**Strict-Send** (`PathPaymentStrictSend`): You specify the exact amount to send. The network finds paths and tells you the minimum the recipient will get. You set a `destMin` to protect against slippage.
+
+For stealth payments, we typically use **strict-receive** because the recipient's invoice specifies exactly how much they should receive.
+
+---
+
+## Finding Paths via Horizon
+
+Before building a transaction, you need to find viable paths. Stellar's Horizon server provides path-finding endpoints.
+
+### Strict-Receive Path Finding
+
