@@ -1,38 +1,48 @@
 ---
 title: "Stellar Path Payments for Stealth Payments"
-description: "Use path payments to send stealth payments across any Stellar asset with automatic conversion and slippage protection."
+description: "Use Stellar path payments to send stealth payments across any asset pair with automatic conversion and slippage protection."
 ---
 
-Stellar path payments let you send one asset and have the recipient receive another—automatically, atomically, and without counterparty risk. When combined with stealth addresses, this becomes a powerful tool for private cross-asset transfers.
+Stellar path payments are a powerful primitive for cross-asset transfers. When combined with Wraith's stealth payment infrastructure, they enable private sends where the sender holds one asset and the recipient receives another—automatically, atomically, and without manual swaps.
 
-This guide covers how to use path payments with the Wraith SDK's stealth payment support.
+This guide covers how path payments work, when to use them, and how to construct stealth path payments using the Wraith SDK.
 
 ---
 
 ## What Are Path Payments?
 
-Standard payments require the sender and recipient to agree on the asset. Path payments remove that constraint: you can send **any asset you hold**, and the recipient receives **any asset they want**.
+A path payment is a single Stellar operation that sends one asset and delivers a different asset to the recipient. Stellar automatically finds a conversion path through the DEX (decentralized exchange) or liquidity pools.
 
-Stellar provides two path payment operations:
+There are two variants:
 
-| Operation | Sender Specifies | Recipient Receives | Use Case |
-|-----------|-----------------|-------------------|----------|
-| `PathPaymentStrictReceive` | Max to send | **Exact** amount | Recipient needs precise value |
-| `PathPaymentStrictSend` | **Exact** amount to send | Min to receive | Sender wants to control spend |
+| Variant | Sender Specifies | Guarantees | Use Case |
+|---------|------------------|------------|----------|
+| **Strict-Receive** | Maximum to send | Exact amount recipient gets | You want recipient to receive exactly 100 USDC |
+| **Strict-Send** | Exact amount to send | Minimum recipient gets | You want to send exactly 500 XLM, recipient gets whatever that buys |
 
-### Strict-Receive vs Strict-Send
+### Strict-Receive Path Payment
 
-**Strict-Receive** (`PathPaymentStrictReceive`): You specify the exact amount the recipient should receive. The network finds paths and tells you the maximum you'll need to send. You set a `sendMax` to protect against slippage.
+The sender sets:
+- **Send max**: Upper bound on what they're willing to spend
+- **Destination asset**: What the recipient receives
+- **Destination amount**: Exact amount the recipient gets
 
-**Strict-Send** (`PathPaymentStrictSend`): You specify the exact amount to send. The network finds paths and tells you the minimum the recipient will get. You set a `destMin` to protect against slippage.
+Stellar finds paths and executes if the cost is ≤ send max.
 
-For stealth payments, we typically use **strict-receive** because the recipient's invoice specifies exactly how much they should receive.
+### Strict-Send Path Payment
+
+The sender sets:
+- **Send amount**: Exact amount to deduct from their balance
+- **Destination asset**: What the recipient receives
+- **Minimum destination amount**: Floor on what the recipient gets
+
+Stellar finds paths and executes if the delivered amount is ≥ minimum.
 
 ---
 
-## Finding Paths via Horizon
+## Path Finding via Horizon
 
-Before building a transaction, you need to find viable paths. Stellar's Horizon server provides path-finding endpoints.
+Before building a transaction, you need to discover viable paths. Horizon exposes two endpoints:
 
-### Strict-Receive Path Finding
+### Strict-Receive Paths
 
